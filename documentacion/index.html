@@ -74,6 +74,10 @@
             
             <li class="nav-item" data-level="1"><a href="#documentacion-examen-apache" class="nav-link">Documentación examen Apache</a>
               <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#parte-1-implantacion-de-una-web-estatica-con-apache" class="nav-link">Parte 1 Implantación de una web estática con Apache</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
               </ul>
             </li>
         </ul>
@@ -81,7 +85,111 @@
 </div></div>
                     <div class="col-md-9" role="main">
 
-<h1 id="documentacion-examen-apache">Documentación examen Apache</h1></div>
+<h1 id="documentacion-examen-apache">Documentación examen Apache</h1>
+<hr />
+<h2 id="parte-1-implantacion-de-una-web-estatica-con-apache">Parte 1 Implantación de una web estática con Apache</h2>
+<h3 id="instalamos-apache">Instalamos apache</h3>
+<p><code>sudo apt update</code>
+<code>sudo apt install apache2 -y</code></p>
+<h4 id="creamos-los-directorios-para-los-sitios">Creamos los directorios para los sitios</h4>
+<p><code>sudo mkdir -p /var/www/html/pepe.com</code>
+<code>sudo mkdir -p /var/www/html/tono.com</code></p>
+<h4 id="borramos-el-indexhtml-por-defecto">Borramos el index.html por defecto</h4>
+<p><code>cd /var/www/html</code>
+<code>sudo rm -rf index.html</code>
+<code>sudo systemctl restart apache2.service</code></p>
+<h4 id="borramos-el-000conf-por-defecto">Borramos el 000.conf por defecto</h4>
+<p><code>cd /etc/apache2/sites-enabled</code>
+<code>sudo a2dissite 000-default.conf</code>
+<code>sudo systemctl reload apache2.service</code> </p>
+<h4 id="creamos-el-indexhtml-para-el-sitio-1">Creamos el index.html para el sitio-1</h4>
+<p><code>sudo nano /var/www/html/pepe.com/index.html</code></p>
+<pre><code class="language-html">&lt;html&gt;
+    &lt;body&gt;
+        &lt;h1&gt;Pagina-apache-estatico&lt;/h1&gt;
+        &lt;h2&gt;Dominio pepe.com&lt;/h2&gt;
+    &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p><code>sudo systemctl restart apache2.service</code></p>
+<h4 id="configuramos-el-sitio-apache-para-el-sitio-1">Configuramos el sitio apache para el sitio-1</h4>
+<p><code>cd /etc/apache2/sites-available/</code>
+<code>sudo nano pepe.conf</code></p>
+<pre><code class="language-html">&lt;VirtualHost *:3380&gt;
+    ServerName www.pepe.com
+    ServerAlias pepe.com
+    ServerAdmin webmaster@pepe.com
+    DocumentRoot /var/www/html/pepe.com
+    DirectoryIndex index.html
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+&lt;/VirtualHost&gt;
+</code></pre>
+<h4 id="comprobamos-la-sintaxis">Comprobamos la sintaxis</h4>
+<p><code>sudo apachectl configtest</code>
+<code>sudo a2ensite pepe.conf</code>
+<code>sudo systemctl reload apache2.service</code></p>
+<h4 id="creamos-el-indexhtml-para-el-sitio-2">Creamos el index.html para el sitio-2</h4>
+<p><code>sudo nano /var/www/html/pepe.com/index.html</code>
+<code>sudo cp /home/yo/Escritorio/Comparte/site /var/www/html/tono.com</code>
+<code>sudo systemctl restart apache2.service</code></p>
+<h4 id="configuramos-el-sitio-apache-para-el-sitio-2">Configuramos el sitio apache para el sitio-2</h4>
+<p><code>cd /etc/apache2/sites-available/</code>
+<code>sudo nano tono.conf</code></p>
+<pre><code class="language-html">&lt;VirtualHost *:4480&gt;
+    ServerName www.tono.com
+    ServerAlias tono.com
+    ServerAdmin webmaster@tono.com
+    DocumentRoot /var/www/html/tono.com/site/
+    DirectoryIndex index.html
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+&lt;/VirtualHost&gt;
+</code></pre>
+<h4 id="comprobamos-sintaxis">Comprobamos-sintaxis</h4>
+<p><code>sudo apachectl configtest</code>
+<code>sudo a2ensite tono.conf</code>
+<code>sudo systemctl reload apache2.service</code></p>
+<h4 id="configuramos-apache-para-escuchar-por-los-puertos-3380-para-el-primer-sitio-y-4480-para-el-segundo-sitio">Configuramos apache para escuchar por los puertos <code>3380</code> para el primer sitio y <code>4480</code> para el segundo sitio</h4>
+<p><code>sudo nano /etc/apache2/ports.conf</code></p>
+<pre><code class="language-bash"># If you just change the port or add more ports here, you will likely also
+# have to change the VirtualHost statement in
+# /etc/apache2/sites-enabled/000-default.conf
+
+Listen 80
+Listen 3380
+Listen 4480
+
+&lt;IfModule ssl_module&gt;
+        Listen 443
+&lt;/IfModule&gt;
+
+&lt;IfModule mod_gnutls.c&gt;
+        Listen 443
+&lt;/IfModule&gt;
+</code></pre>
+<p><code>sudo systemctl restart apache2.service</code></p>
+<h4 id="agregamos-estas-lineas-en-el-archivo-etchosts-para-las-pruebas">Agregamos estas líneas en el archivo /etc/hosts para las pruebas</h4>
+<p><code>sudo nano /etc/hosts</code></p>
+<pre><code class="language-bash">127.0.0.1 localhost
+127.0.1.1 yo-Virtual
+127.0.0.1 www.pepe.com
+127.0.0.1 www.tono.com
+</code></pre>
+<h4 id="asignar-los-permisos-correctos-para-el-usuario-www-data">Asignar los permisos correctos para el usuario www-data</h4>
+<p><code>sudo chown -R www-data:www-data /var/www/html/pepe.com</code>
+<code>sudo chown -R www-data:www-data /var/www/html/tono.com</code>
+<code>sudo chmod 755 /var/www/html/tono.com</code>
+<code>sudo chmod 755 /var/www/html/pepe.com</code>
+<code>sudo systemctl restart apache2.service</code></p>
+<h4 id="permisos-adicionales">Permisos adicionales</h4>
+<p>Al estar fuera del directorio <code>/var/www</code> en mi caso debo ajustar los permisos para que apache pueda acceder a ellos, por lo que daré además permisos a los directorios que apache necesita atravesar, por que sino me da error de permisos:</p>
+<p><code>sudo chmod o+x ~</code>
+<code>sudo chmod -R 755 ~/Directorio-site1 fuera de /var/www</code>
+<code>sudo chmod -R 755 ~/Directorio-site2 fuera de /var/www</code>
+<code>sudo systemctl restart apache2.service</code></p>
+<p>Para el primer sitio: <a href="http://www.pepe.com:3380">http://www.pepe.com:3380</a>
+Para el segundo sitio: <a href="http://www.tono.com:4480">http://www.tono.com:4480</a></p></div>
             </div>
         </div>
 
